@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  orderer.example.com:
+    image: hyperledger/fabric-orderer:latest
+    container_name: orderer.example.com
+    environment:
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+    ports:
+      - "7050:7050"
+    volumes:
+      - ./fabric-config:/var/hyperledger/config
+    command: orderer
