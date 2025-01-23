@@ -5,7 +5,7 @@ const path = require('path');
 
 // La CA firma el certificado
 const signCSR = (req, res) => {
-    const { csrName } = req.body;
+    const { CSR } = req.body;
 
     if (!csrName) {
         return res.status(400).json({ error: 'csrName es obligatorio.' });
@@ -50,4 +50,4 @@ const validateCert = (req, res) => {
 
 
 
-module.exports = {generateCSR, signCSR, validateCert}
+module.exports = {signCSR, validateCert}

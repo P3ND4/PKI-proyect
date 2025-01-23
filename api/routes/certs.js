@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { generateCSR, signCSR, validateCert } = require('../controllers/certController');
+const {signCSR, validateCert } = require('../controllers/certController');
 
 
 router.post('/sign-csr', signCSR);
