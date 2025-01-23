@@ -1,6 +1,7 @@
 const forge = require('node-forge');
 const fs = require('fs');
 const path = require('path');
+const { error } = require('console');
 
 
 // La CA firma el certificado
@@ -37,7 +38,7 @@ const validateCert = (req, res) => {
     }
 
     const certPath = path.join(__dirname, '../../certs/issued/', certName);
-    const caCertPath = path.join(__dirname, '../../certs/ca/ca.crt');
+    const caCertPath = path.join(__dirname, '../../certs/ca/ca-cert.crt');
 
     try {
         execSync(`openssl verify -CAfile ${caCertPath} ${certPath}`);
@@ -47,7 +48,21 @@ const validateCert = (req, res) => {
     }
 };
 
+// Certificado de la CA de la PKI
+const rootCert = (req, res) => {
+    certPath = '../../certs/ca/ca-cert.crt'
+    rootCAcert = forge.pki.certificateFromPem(certPath)
+    try{
+        res.json({
+            cert: rootCAcert
+        })
+    }catch (err){
+        res.status(500).json({error: 'Error al solicitar el certificado raiz', details: err})
+    }
+
+}
 
 
 
-module.exports = {signCSR, validateCert}
+
+module.exports = {signCSR, validateCert, rootCert}

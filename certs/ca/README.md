@@ -1,0 +1,1 @@
+## En esta carpeta se almacenarian las claves privada y publica de la CA de mi PKI, junto con su certificado.

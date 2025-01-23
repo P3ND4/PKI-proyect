@@ -23,7 +23,7 @@ const initializeCA = () => {
   // Generar la clave privada RSA de la CA
   const { privateKey, publicKey } = forge.pki.rsa.generateKeyPair(2048);
   const privateKeyPem = forge.pki.privateKeyToPem(privateKey);
-
+  const publicKeyPem = forge.pki.publicKeyToPem(publicKey)
   // Crear el certificado raíz de la CA
   const cert = forge.pki.createCertificate();
   cert.publicKey = publicKey;
@@ -43,7 +43,8 @@ const initializeCA = () => {
 
   // Guardar la clave privada y el certificado en archivos
   fs.writeFileSync('certs/ca/ca-private.key', privateKeyPem);
-  fs.writeFileSync('certs/ca/ca-cert.pem', certPem);
+  fs.writeFileSync('certs/ca/ca-cert.crt', certPem);
+  fs.writeFileSync('certs/ca/ca-public.key', publicKeyPem)
 
   console.log('Clave privada y certificado raíz de la CA generados.');
 
