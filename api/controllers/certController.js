@@ -6,7 +6,8 @@ const { error } = require('console');
 
 // La CA firma el certificado
 const signCSR = (req, res) => {
-    const { CSR } = req.body;
+    const { csr } = req.body;
+    forge.pki.certificationRequestToPem(csr)
 
     if (!csrName) {
         return res.status(400).json({ error: 'csrName es obligatorio.' });

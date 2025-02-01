@@ -1,0 +1,52 @@
+---
+Organizations:
+  - &Org1
+    Name: Org1MSP
+    ID: Org1MSP
+    MSPDir: ./crypto-config/peerOrganizations/org1.example.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org1MSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org1MSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org1MSP.admin')"
+
+Orderer: 
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.example.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 98 MB
+    PreferredMaxBytes: 512 KB
+  Policies:
+    Readers:
+      Type: Signature
+      Rule: "OR('Org1MSP.member')"
+    Writers:
+      Type: Signature
+      Rule: "OR('Org1MSP.member')"
+    Admins:
+      Type: Signature
+      Rule: "OR('Org1MSP.admin')"
+  Organizations:
+    - *Org1
+
+Channel:
+  Policies:
+    Readers:
+      Type: Signature
+      Rule: "OR('Org1MSP.member')"
+    Writers:
+      Type: Signature
+      Rule: "OR('Org1MSP.member')"
+    Admins:
+      Type: Signature
+      Rule: "OR('Org1MSP.admin')"
+  Capabilities:
+    Channel: V2_0
