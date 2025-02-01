@@ -6,8 +6,9 @@ const forge = require('node-forge')
 const fs = require('fs');
 const pem = require('node-forge/lib/pem');
 const app = express();
-
+const selfsigned = require('selfsigned');
 app.use(express.json());
+
 app.use('/api/certs', certsRoute);
 
 // Función para iniciar el bloque génesis
@@ -33,57 +34,48 @@ const pemize = (pem) => {
   return element
 }
 
-const initializeCA = () => {
-  // Generar la clave privada RSA de la CA
-  const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
-    namedCurve: 'P-256' // Usamos la curva P-256
-  });
-  const privateKeyPem = privateKey.export({ type: 'pkcs8', format: 'pem' });
-  const publicKeyPem = publicKey.export({ type: 'spki', format: 'pem' });
-  // Crear el certificado raíz de la CA
-  const csrAttributes = [
-    { name: 'commonName', value: 'example.com' },
-    { name: 'countryName', value: 'US' },
-    { name: 'stateOrProvinceName', value: 'California' },
-    { name: 'localityName', value: 'San Francisco' },
-    { name: 'organizationName', value: 'Example Org' },
+const initializeCA = () => {// ca-root.js
+
+  const fs = require('fs');
+
+  // Definir los atributos para el certificado (sujeto/emisor)
+  const attrs = [
+    { name: 'commonName', value: 'Mi CA Root' },
+    { name: 'countryName', value: 'CU' },
+    { name: 'organizationName', value: 'Mi Empresa' },
+    { shortName: 'OU', value: 'Departamento de Seguridad' }
   ];
-  const csr = crypto.createSign('SHA256');
-  csr.update('dummy message');
-  const signature = csr.sign(privateKey);
 
-  // Crear el objeto de firma para el certificado
-  const cert = new crypto.X509Certificate();
-
-  // Detalles del certificado
-  const certOptions = {
-    key: privateKey,         // Clave privada para firmar
-    publicKey: publicKey,               // Clave pública asociada
-    subject: 'Ca-root', // Nombre del sujeto
-    issuer: 'Ca-root',  // El mismo sujeto porque es autofirmado
-    notBefore: new Date(),    // Inicio de validez
-    notAfter: new Date(),     // Fin de validez
-    serialNumber: '01',       // Número de serie
+  // Opciones para la generación del certificado
+  const options = {
+    algorithm: 'ecdsa',
+    days: 3650, // Válido por 10 años (3650 días)
+    keyPairOptions: {
+      namedCurve: 'prime256v1'
+    },
+    extensions: [
+      // Indicamos que es una CA
+      { name: 'basicConstraints', cA: true },
+      { name: 'keyUsage', keyCertSign: true, digitalSignature: true, nonRepudiation: true, keyEncipherment: true },
+      { name: 'subjectKeyIdentifier' }
+    ]
   };
-  forge.pki.ed25519.generateKeyPair
-  // Configurar fechas del certificado
-  certOptions.notAfter.setFullYear(certOptions.notBefore.getFullYear() + 1); // 1 año de validez
 
-  // Firmar el certificado
-  const signedCert = crypto.createSelfSignedCertificate(certOptions);
-  //const sign = crypto.createSign('SHA256');
-  //sign.update(JSON.stringify(cert));  // Firmar el contenido del certificado (en formato texto)
-  //const signat = sign.sign(privateKey);  // Firmamos usando la clave privada
-  //pemconv = pemize(signat.toString('base64'))
+  console.log('Generando CA raíz...');
 
-  //const certPem = `-----BEGIN CERTIFICATE-----\n${pemconv}\n-----END CERTIFICATE-----`;
+  // Genera el certificado y las claves (retorna un objeto con las propiedades `private` y `cert`)
+  const pems = selfsigned.generate(attrs, options);
 
+
+
+
+  console.log('✅ CA raíz generada en "ca-root.pem".');
 
   // Guardar la clave privada y el certificado en archivos
-  fs.writeFileSync('certs/ca/ca-private.key', privateKeyPem);
-  fs.writeFileSync('certs/ca/ca-cert.crt', signedCert);
-  fs.writeFileSync('certs/ca/ca-public.key', publicKeyPem)
-  ce = forge.pki.certificateFromPem(certPem)
+  fs.writeFileSync('certs/ca/ca-private.key', pems.private);
+  fs.writeFileSync('certs/ca/ca-cert.crt', pems.cert);
+  fs.writeFileSync('certs/ca/ca-public.key', pems.public)
+  ce = forge.pki.certificateFromPem(pems.cert)
   console.log('Clave privada y certificado raíz de la CA generados.');
 
 }
