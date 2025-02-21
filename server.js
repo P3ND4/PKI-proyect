@@ -1,15 +1,21 @@
 const express = require('express');
 const { exec } = require('child_process');
-const certsRoute = require('./api/routes/certs');
 const crypto = require('crypto')
 const forge = require('node-forge')
 const fs = require('fs');
 const pem = require('node-forge/lib/pem');
 const app = express();
 const selfsigned = require('selfsigned');
-app.use(express.json());
+const path = require('path')
+const {execSync} = require('child_process') 
 
-app.use('/api/certs', certsRoute);
+
+const certsRoute = require('./api/routes/certs.js');
+app.use(express.json());
+app.use('/', certsRoute);
+app.get('/test', (req, res) => {
+  res.send("Servidor funcionando correctamente");
+});
 
 // Función para iniciar el bloque génesis
 const initializeGenesis = () => {
@@ -36,55 +42,38 @@ const pemize = (pem) => {
 
 const initializeCA = () => {// ca-root.js
 
-  const fs = require('fs');
-
-  // Definir los atributos para el certificado (sujeto/emisor)
-  const attrs = [
-    { name: 'commonName', value: 'Mi CA Root' },
-    { name: 'countryName', value: 'CU' },
-    { name: 'organizationName', value: 'Mi Empresa' },
-    { shortName: 'OU', value: 'Departamento de Seguridad' }
-  ];
-
-  // Opciones para la generación del certificado
-  const options = {
-    algorithm: 'ecdsa',
-    days: 3650, // Válido por 10 años (3650 días)
-    keyPairOptions: {
-      namedCurve: 'prime256v1'
-    },
-    extensions: [
-      // Indicamos que es una CA
-      { name: 'basicConstraints', cA: true },
-      { name: 'keyUsage', keyCertSign: true, digitalSignature: true, nonRepudiation: true, keyEncipherment: true },
-      { name: 'subjectKeyIdentifier' }
-    ]
-  };
-
+  
+  
+  const privateKeyPath = path.join(__dirname, 'certs/ca/ca-private.key');
+  const certPath = path.join(__dirname, 'certs/ca/ca-cert.crt');
+  const ext_path = path.join(__dirname, 'ext.cnf')
+  var ca_dir = fs.readdirSync(path.join(__dirname,`certs/ca/`))
+  if(ca_dir.length > 1) return; 
   console.log('Generando CA raíz...');
 
-  // Genera el certificado y las claves (retorna un objeto con las propiedades `private` y `cert`)
-  const pems = selfsigned.generate(attrs, options);
+  // 1️⃣ Generar la clave privada ECDSA (prime256v1)
+  
+  execSync(`openssl ecparam -name prime256v1 -genkey -noout -out ${privateKeyPath}`);
+  console.log('✔️ Clave privada generada: private_key.pem');
+  
+
+  const subject = '/CN=MyOrg-CA/O=MyOrg'; // Ajusta el CN y O según lo necesario
+  execSync(
+    `openssl req -new -x509 -key ${privateKeyPath} -out ${certPath} -days 3650 -subj "${subject}" -config ${ext_path} -extensions v3_ca`
+  );
+  
+  console.log('✔️ Certificado autofirmado generado: self_signed_cert.pem');
+  
 
 
 
-
-  console.log('✅ CA raíz generada en "ca-root.pem".');
-
-  // Guardar la clave privada y el certificado en archivos
-  fs.writeFileSync('certs/ca/ca-private.key', pems.private);
-  fs.writeFileSync('certs/ca/ca-cert.crt', pems.cert);
-  fs.writeFileSync('certs/ca/ca-public.key', pems.public)
-  ce = forge.pki.certificateFromPem(pems.cert)
-  console.log('Clave privada y certificado raíz de la CA generados.');
 
 }
 
 
 // Arrancar la aplicación y generar génesis
-const PORT = 3000;
+const PORT = 2000;
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en el puerto ${PORT}`);
   initializeCA();
-  initializeGenesis();
 });

@@ -1,0 +1,7 @@
+
+[ v3_ext ]
+basicConstraints = CA:FALSE
+keyUsage = digitalSignature
+extendedKeyUsage = serverAuth,clientAuth
+authorityKeyIdentifier = keyid,issuer
+    
